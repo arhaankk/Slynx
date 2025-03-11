@@ -20,4 +20,4 @@ def detect_lang(text: str) -> str:
     return response.text
 
 
-print(detect_lang("Aami tomake bhalo bhaashi"))
+print(detect_lang("aaj kal tere mere"))
