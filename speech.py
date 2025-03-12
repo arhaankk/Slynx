@@ -10,7 +10,7 @@ class SpeechGenerator:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.description_tokenizer = AutoTokenizer.from_pretrained(self.model.config.text_encoder._name_or_path)
 
-    def generate_speech(self, prompt, description, output_filename="output.wav"):
+    def generate_speech(self, prompt: str, description: str, output_filename="output.wav"):
         description_input_ids = self.description_tokenizer(description, return_tensors="pt").to(self.device)
         prompt_input_ids = self.tokenizer(prompt, return_tensors="pt").to(self.device)
 
