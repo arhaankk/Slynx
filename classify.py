@@ -11,8 +11,8 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 def detect_lang(text: str) -> str:
     prompt = (
         """ 
-                    You are a model for detecting languages. For the given text, you will output just one word - the language it is written in. 
-                    Try your very best to get it as correct as possible. If you don't know the answer, reply "False"
+            You are a model for detecting languages. For the given text, you will output just one word - the language it is written in. 
+            Try your very best to get it as correct as possible. If you don't know the answer, reply "False"
         """
         + text
     )
