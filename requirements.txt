@@ -1,5 +1,6 @@
 google-generativeai
 python-dotenv
+indic-transliteration
 torch
 TTS
 git+https://github.com/huggingface/parler-tts.git
