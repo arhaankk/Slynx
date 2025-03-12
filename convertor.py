@@ -1,14 +1,19 @@
 from indic_transliteration import sanscript
 from indic_transliteration.sanscript import transliterate
 
-def transliterate_text(text, source_lang, target_script):
-    return transliterate(text, source_lang, target_script)
+class TransliterateText:
+    def __init__(self, source_lang, target_script):
+        self.source_lang = source_lang
+        self.target_script = target_script
 
+    def transliterate_text(self, text: str) -> str:
+        return transliterate(text, self.source_lang, self.target_script)
 
-text = "veere, ki hal hai"
-source_language = sanscript.HK  
-target_script = sanscript.GURMUKHI  
+if __name__ == "__main__":
+    source_language = sanscript.HK  
+    target_script = sanscript.GURMUKHI  
+    transliterator = TransliterateText(source_language, target_script)
+    text = "veere, ki hal hai"
+    gurmukhi_text = transliterator.transliterate_text(text)
+    print(gurmukhi_text)
 
-
-gurmukhi_text = transliterate_text(text, source_language, target_script)
-print(gurmukhi_text)
