@@ -4,7 +4,6 @@ from classify import LanguageDetector
 
 import os
 from indic_transliteration import sanscript
-from indic_transliteration.sanscript import transliterate
 
 class App:
     def __init__(self):
