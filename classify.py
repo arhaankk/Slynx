@@ -19,5 +19,6 @@ def detect_lang(text: str) -> str:
     response = model.generate_content(prompt)
     return response.text
 
+print(detect_lang("aaj kal tere mere"))
 
-print(detect_lang("Aami tomake bhalo bhaashi"))
+
