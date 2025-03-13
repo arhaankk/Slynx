@@ -153,6 +153,6 @@ def transliterate_with_non_tokens(input_text, model, source_tokenizer, target_to
     return transliterated_text
 
 # 13. Test with an example romanized Hindi input
-test_text = "mein market ja rahi hoon"
+test_text = "aur bhai kaisa hain?"
 result = transliterate_with_non_tokens(test_text, model, source_tokenizer, target_tokenizer, max_seq_length)
 print("Predicted Transliteration:", result)
