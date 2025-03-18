@@ -23,6 +23,8 @@ def generate_speech(prompt, description, output_filename="output.wav"):
     sf.write(output_filename, audio_arr, model.config.sampling_rate)
 
 
-prompt = "यार, तू क्या टाइम पास कर रहा है? थोड़ा काम भी कर ले, नहीं तो फिर समझ ले, मजे नहीं आएंगे!"
-description = "Rohit is an 18 year old boy that likes to speak in informal hindi."
+prompt = "త ల్లని పిలీీ"
+description = "Kiran's voice is clear and friendly with a moderate pace."
 generate_speech(prompt, description)
+# sf.write("/Users/apoorvadevarakonda/Documents/output.wav", audio_arr, model.config.sampling_rate)
+

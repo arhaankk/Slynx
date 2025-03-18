@@ -87,7 +87,7 @@ callbacks = [
     ModelCheckpoint('language_classifier.h5', monitor='val_loss', save_best_only=True)
 ]
 
-#model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
+# model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
 model = load_model('language_classifier.h5')
 
 # --- Define a function to predict language from a new romanized input ---
@@ -101,6 +101,6 @@ def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
     return label[0]
 
 # --- Test the classifier with a sample input ---
-test_text = "pyaar"
+test_text = "enda pere raju"
 predicted_language = predict_language(test_text, model, tokenizer, label_encoder, max_seq_length)
 print("Predicted language:", predicted_language)
