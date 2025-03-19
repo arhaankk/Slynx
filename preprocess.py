@@ -1,40 +1,6 @@
-# import pandas as pd
-
-# def process_hindi_tsv(file_path):
-#     # Read TSV file with no header; assumes two columns: native and roman
-#     df = pd.read_csv(file_path, delimiter="\t", header=None, names=['hi', 'en'], encoding='utf-8')
-    
-#     native_sentences = []
-#     roman_sentences = []
-#     current_native = []
-#     current_roman = []
-    
-#     # Group tokens until a sentence separator is found
-#     for _, row in df.iterrows():
-#         if row['hi'] == '</s>' and row['en'] == '</s>':
-#             if current_native and current_roman:
-#                 native_sentences.append(" ".join(current_native))
-#                 roman_sentences.append(" ".join(current_roman))
-#             current_native = []
-#             current_roman = []
-#         else:
-#             current_native.append(row['hi'])
-#             current_roman.append(row['en'])
-            
-#     # Append any remaining tokens as a sentence
-#     if current_native and current_roman:
-#         native_sentences.append(" ".join(current_native))
-#         roman_sentences.append(" ".join(current_roman))
-    
-#     return pd.DataFrame({'hi': native_sentences, 'en': roman_sentences})
-
-# # Example usage:
-# df_sentences = process_hindi_tsv("datahi.tsv")
-# print(df_sentences.head())
-
 import pandas as pd
 
-def process_hindi_tsv(file_path):
+def process_language_tsv(file_path):
     # Use on_bad_lines='skip' to skip malformed lines
     df = pd.read_csv(
         file_path,
@@ -69,5 +35,5 @@ def process_hindi_tsv(file_path):
     return pd.DataFrame({'bn': native_sentences, 'en': roman_sentences})
 
 # Example usage:
-df_sentences = process_hindi_tsv("databn.tsv")
+df_sentences = process_language_tsv("databn.tsv")
 print(df_sentences.head())

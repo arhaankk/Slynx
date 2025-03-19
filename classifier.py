@@ -46,8 +46,7 @@ data = pd.concat([df_hi[['text', 'language']],
                   df_bn[['text', 'language']]],
                  ignore_index=True)
 
-# print("Combined data sample:")
-# print(data.head())
+
 
 # --- Tokenize at character level ---
 tokenizer = Tokenizer(char_level=False)
@@ -87,8 +86,9 @@ callbacks = [
     ModelCheckpoint('language_classifier.h5', monitor='val_loss', save_best_only=True)
 ]
 
-# model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
-model = load_model('language_classifier.h5')
+model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
+# To load the model
+# model = load_model('language_classifier.h5')
 
 # --- Define a function to predict language from a new romanized input ---
 def predict_language(text, model, tokenizer, label_encoder, max_seq_length):

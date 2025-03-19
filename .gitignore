@@ -2,3 +2,4 @@
 venv/
 *.wav
 test.py
+models/
