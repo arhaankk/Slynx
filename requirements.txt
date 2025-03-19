@@ -6,3 +6,4 @@ torch
 git+https://github.com/huggingface/parler-tts.git
 transformers
 tensorflow
+pandas

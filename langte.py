@@ -91,7 +91,7 @@ model.summary()
 # 10. Set up callbacks and train the model
 # callbacks = [
 #     EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
-#     ModelCheckpoint('telugu_transliteration.h5', monitor='val_loss', save_best_only=True),
+#     ModelCheckpoint('models/telugu_transliteration.h5', monitor='val_loss', save_best_only=True),
 #     ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
 # ]
 
@@ -102,8 +102,8 @@ model.summary()
 #                     callbacks=callbacks)
 
 # 11. Save the trained model
-#model.save('telugu_transliteration_model.keras')
-model = load_model('telugu_transliteration_model.keras')
+#model.save('models/telugu_transliteration_model.keras')
+model = load_model('models/telugu_transliteration_model.keras')
 
 # 12. Define a function to transliterate input while preserving non-token characters
 def transliterate_with_non_tokens(input_text, model, source_tokenizer, target_tokenizer, max_seq_length):
