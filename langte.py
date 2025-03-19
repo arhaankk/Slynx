@@ -32,7 +32,7 @@ target_tokenizer = Tokenizer(char_level=True, filters='')
 target_tokenizer.fit_on_texts(telugu_tokens)
 
 # 3. Load the TSV file using pandas
-data = pd.read_csv("datate.tsv", delimiter="\t", header=None, names=["te", "en"], 
+data = pd.read_csv("data/datate.tsv", delimiter="\t", header=None, names=["te", "en"], 
                    encoding="utf-8", dtype=str, on_bad_lines='skip')
 
 # 4. Remove empty rows and ensure strings in both 'te' and 'en' fields

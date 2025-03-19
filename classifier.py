@@ -18,11 +18,11 @@ def load_and_label(file_path, language):
     return df
 
 # Load Hindi, Marathi, and Telugu data
-df_hi = load_and_label("datahi.tsv", "hi")
-df_mr = load_and_label("datamr.tsv", "mr")
-df_te = load_and_label("datate.tsv", "te")  # Assuming a TSV for Telugu
-df_ml = load_and_label("dataml.tsv", "ml")
-df_bn = load_and_label("databn.tsv", "bn")
+df_hi = load_and_label("data/datahi.tsv", "hi")
+df_mr = load_and_label("data/datamr.tsv", "mr")
+df_te = load_and_label("data/datate.tsv", "te")  # Assuming a TSV for Telugu
+df_ml = load_and_label("data/dataml.tsv", "ml")
+df_bn = load_and_label("data/databn.tsv", "bn")
 # --- Clean the romanized text ---
 def clean_text(text):
     if not isinstance(text, str):

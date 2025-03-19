@@ -36,7 +36,7 @@ from datasets import load_dataset
 
 dataset = load_dataset(
     "csv", 
-    data_files="datahi.tsv", 
+    data_files="data/datahi.tsv", 
     delimiter="\t", 
     column_names=["hi", "en"]
 )
