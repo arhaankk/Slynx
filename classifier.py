@@ -6,6 +6,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import class_weight
 
@@ -47,24 +48,24 @@ tokenizer = Tokenizer(char_level=False)
 tokenizer.fit_on_texts(data['text'])
 sequences = tokenizer.texts_to_sequences(data['text'])
 max_seq_length = max(len(seq) for seq in sequences)
-X = pad_sequences(sequences, maxlen=max_seq_length, padding='post')
+x = pad_sequences(sequences, maxlen=max_seq_length, padding='post')
 
 # # --- Encode language labels ---
 label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(data['language'])
 print("Languages found:", label_encoder.classes_)
-
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
 #  Comment from here to load model
-# # --- Compute class weights for balanced training ---
-# weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
-# class_weights = dict(enumerate(weights))
-# print("Class weights:", class_weights)
+# --- Compute class weights for balanced training ---
+weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
+class_weights = dict(enumerate(weights))
+print("Class weights:", class_weights)
 
-# # --- Define the classifier model ---
-# embedding_dim = 32
-# hidden_units = 64
-# vocab_size = len(tokenizer.word_index) + 1
-# num_classes = len(label_encoder.classes_)
+# --- Define the classifier model ---
+embedding_dim = 32
+hidden_units = 64
+vocab_size = len(tokenizer.word_index) + 1
+num_classes = len(label_encoder.classes_)
 
 model = Sequential([
     Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_shape=(max_seq_length,)),
@@ -77,12 +78,12 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 model.summary()
 
 # --- Set up callbacks and train the classifier ---
-# callbacks = [
-#     EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
-#     ModelCheckpoint('language_classifier.h5', monitor='val_loss', save_best_only=True)
-# ]
+callbacks = [
+    EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
+    ModelCheckpoint('language_classifier.h5', monitor='val_loss', save_best_only=True)
+]
 
-model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
+model.fit(x, y, validation_data=(x_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
 # To load the model
 # model = load_model('language_classifier.h5')
 
@@ -97,6 +98,6 @@ def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
     return label[0]
 
 # --- Test the classifier with a sample input ---
-test_text = "enda pere raju"
+test_text = "Tu kasa aahes? Mi mast ahe! Bhetaycha ka?"
 predicted_language = predict_language(test_text, model, tokenizer, label_encoder, max_seq_length)
 print("Predicted language:", predicted_language)
