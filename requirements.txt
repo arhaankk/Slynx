@@ -1,4 +1,3 @@
-indic-transliteration
 torch
 TTS
 git+https://github.com/huggingface/parler-tts.git

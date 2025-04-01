@@ -66,35 +66,25 @@ print("Languages found:", label_encoder.classes_)
 # vocab_size = len(tokenizer.word_index) + 1
 # num_classes = len(label_encoder.classes_)
 
-# model = Sequential([
-#     Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_seq_length),
-#     LSTM(hidden_units),
-#     Dropout(0.5),
-#     Dense(num_classes, activation='softmax')
-# ])
-# # Force build the model so that summary shows proper parameter counts.
-# model.build(input_shape=(None, max_seq_length))
-# model.summary()
+model = Sequential([
+    Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_shape=(max_seq_length,)),
+    LSTM(hidden_units),
+    Dropout(0.5),
+    Dense(num_classes, activation='softmax')
+])
 
-# model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.summary()
 
-# # --- Set up callbacks using native Keras format ---
+# --- Set up callbacks and train the classifier ---
 # callbacks = [
 #     EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
-#     ModelCheckpoint('language_classifier.keras', monitor='val_loss', save_best_only=True)
+#     ModelCheckpoint('language_classifier.h5', monitor='val_loss', save_best_only=True)
 # ]
 
-# # --- Train the classifier ---
-# # Using the entire dataset for training, with 10% automatically held out for validation.
-# model.fit(X, y, validation_split=0.1, epochs=10, batch_size=64, callbacks=callbacks, class_weight=class_weights)
-
-# # Evaluate on the entire dataset (validation_split was used internally)
-# loss, accuracy = model.evaluate(X, y, verbose=0)
-# print("Overall Accuracy on full data:", accuracy)
-
-## To load the model
-model = load_model('language_classifier.keras')
-
+model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
+# To load the model
+# model = load_model('language_classifier.h5')
 
 # --- Define prediction function ---
 def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
@@ -107,6 +97,6 @@ def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
     return label[0]
 
 # --- Test the classifier with a sample input ---
-test_text = "Namaskar, mi Rahul aahe."
+test_text = "enda pere raju"
 predicted_language = predict_language(test_text, model, tokenizer, label_encoder, max_seq_length)
 print("Predicted language:", predicted_language)
