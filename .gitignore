@@ -3,3 +3,5 @@ venv/
 *.wav
 test.py
 models/
+*.h5
+*.keras
