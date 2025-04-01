@@ -1,10 +1,11 @@
 import re
 import numpy as np
 import pandas as pd
+import pickle
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import class_weight
@@ -16,7 +17,7 @@ def load_and_label(file_path, language):
     df['language'] = language
     return df
 
-# Example: Load Telugu and Malayalam data
+# Load data for each language
 df_te = load_and_label("data/datate.tsv", "te")
 df_ml = load_and_label("data/dataml.tsv", "ml")
 df_hi = load_and_label("data/datahi.tsv", "hi")
@@ -32,74 +33,78 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-df_te['text'] = df_te['roman'].apply(clean_text)
-df_ml['text'] = df_ml['roman'].apply(clean_text)
-df_hi['text'] = df_hi['roman'].apply(clean_text)
-df_mr['text'] = df_mr['roman'].apply(clean_text)
-df_bn['text'] = df_bn['roman'].apply(clean_text)
+for df in [df_te, df_ml, df_hi, df_bn, df_mr]:
+    df['text'] = df['roman'].apply(clean_text)
+
 # --- Combine the datasets ---
-data = pd.concat([df_te[['text', 'language']], df_ml[['text', 'language']], df_mr[['text', 'language']], df_hi[['text', 'language']], df_bn[['text', 'language']]], ignore_index=True)
+data = pd.concat([df_te[['text', 'language']], df_ml[['text', 'language']],
+                  df_mr[['text', 'language']], df_hi[['text', 'language']],
+                  df_bn[['text', 'language']]], ignore_index=True)
 print("Data distribution:")
 print(data['language'].value_counts())
 
-# --- Tokenize the text ---
+# --- Word-level tokenization ---
 tokenizer = Tokenizer(char_level=False)
 tokenizer.fit_on_texts(data['text'])
 sequences = tokenizer.texts_to_sequences(data['text'])
 max_seq_length = max(len(seq) for seq in sequences)
 X = pad_sequences(sequences, maxlen=max_seq_length, padding='post')
 
-# # --- Encode language labels ---
+# --- Encode language labels ---
 label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(data['language'])
 print("Languages found:", label_encoder.classes_)
 
-#  Comment from here to load model
-# # --- Compute class weights for balanced training ---
-# weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
-# class_weights = dict(enumerate(weights))
-# print("Class weights:", class_weights)
+# Save the tokenizer and label encoder
+with open('tokenizer.pkl', 'wb') as f:
+    pickle.dump(tokenizer, f)
+with open('label_encoder.pkl', 'wb') as f:
+    pickle.dump(label_encoder, f)
 
-# # --- Define the classifier model ---
-# embedding_dim = 32
-# hidden_units = 64
-# vocab_size = len(tokenizer.word_index) + 1
-# num_classes = len(label_encoder.classes_)
+# --- Define a deeper bidirectional classifier model ---
+embedding_dim = 32
+hidden_units = 64
+vocab_size = len(tokenizer.word_index) + 1 #No of unique words the tokenizer found
+num_classes = len(label_encoder.classes_)  #No of languages it is prediction on
 
-# model = Sequential([
-#     Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_seq_length),
-#     LSTM(hidden_units),
-#     Dropout(0.5),
-#     Dense(num_classes, activation='softmax')
-# ])
-# # Force build the model so that summary shows proper parameter counts.
-# model.build(input_shape=(None, max_seq_length))
-# model.summary()
+model = Sequential([
+    Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_seq_length),
+    Bidirectional(LSTM(hidden_units, return_sequences=True)),
+    Dropout(0.5),
+    Bidirectional(LSTM(hidden_units)),
+    Dropout(0.5),
+    Dense(64, activation='relu'),
+    Dropout(0.5),
+    Dense(num_classes, activation='softmax')
+])
+model.build(input_shape=(None, max_seq_length))
+model.summary()
 
-# model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-# # --- Set up callbacks using native Keras format ---
-# callbacks = [
-#     EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
-#     ModelCheckpoint('language_classifier.keras', monitor='val_loss', save_best_only=True)
-# ]
+# --- Set up callbacks ---
+callbacks = [
+    EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
+    ModelCheckpoint('language_classifier.keras', monitor='val_loss', save_best_only=True)
+]
 
-# # --- Train the classifier ---
-# # Using the entire dataset for training, with 10% automatically held out for validation.
-# model.fit(X, y, validation_split=0.1, epochs=10, batch_size=64, callbacks=callbacks, class_weight=class_weights)
+weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
+class_weights = dict(enumerate(weights))
 
-# # Evaluate on the entire dataset (validation_split was used internally)
-# loss, accuracy = model.evaluate(X, y, verbose=0)
-# print("Overall Accuracy on full data:", accuracy)
+# --- Train the classifier ---
+model.fit(X, y, validation_split=0.1, epochs=10, batch_size=64, callbacks=callbacks, 
+          class_weight=class_weights)
 
-## To load the model
-model = load_model('language_classifier.keras')
+# Evaluate the model
+loss, accuracy = model.evaluate(X, y, verbose=0)
+print("Overall Accuracy on full data:", accuracy)
 
+# --- Save the trained model ---
+model.save('language_classifier.keras')
 
 # --- Define prediction function ---
 def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
-    text = text.lower()
-    text = re.sub(r'[^a-z0-9\s]+', '', text)
+    text = re.sub(r'[^a-z0-9\s]+', '', text.lower())
     seq = tokenizer.texts_to_sequences([text])
     padded = pad_sequences(seq, maxlen=max_seq_length, padding='post')
     pred = model.predict(padded)
@@ -107,6 +112,6 @@ def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
     return label[0]
 
 # --- Test the classifier with a sample input ---
-test_text = "Namaskar, mi Rahul aahe."
+test_text = "Enda peru raju"
 predicted_language = predict_language(test_text, model, tokenizer, label_encoder, max_seq_length)
 print("Predicted language:", predicted_language)
