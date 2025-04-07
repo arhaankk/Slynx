@@ -3,7 +3,7 @@ from parler_tts import ParlerTTSForConditionalGeneration
 from transformers import AutoTokenizer
 import soundfile as sf
 
-class TTSGenerator:
+class SpeechGenerator:
     def __init__(self, model_name="ai4bharat/indic-parler-tts"):
         # Select device: use GPU if available, otherwise CPU
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -45,5 +45,5 @@ if __name__ == "__main__":
     prompt = "త ల్లని పిలీీ"
     description = "Kiran's voice is clear and friendly with a moderate pace."
     
-    tts_generator = TTSGenerator()
+    tts_generator = SpeechGenerator()
     tts_generator.generate_speech(prompt, description)

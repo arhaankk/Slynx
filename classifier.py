@@ -10,6 +10,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from utils import clean_text, load_dataset, compute_class_weights, load_existing_model
 
+languages = ["te", "ml", "hi", "bn", "mr"]
+file_paths = [
+    "data/datate.tsv",
+    "data/dataml.tsv",
+    "data/datahi.tsv",
+    "data/databn.tsv",
+    "data/datamr.tsv"
+]
+
 class LanguageClassifier:
     def __init__(self, file_paths, languages, model_path='models/language_classifier.h5'):
         """
@@ -109,18 +118,8 @@ class LanguageClassifier:
         pred = self.model.predict(padded)
         label = self.label_encoder.inverse_transform([np.argmax(pred)])
         return label[0]
-
 if __name__ == "__main__":
     
-    file_paths = [
-        "data/datate.tsv",
-        "data/dataml.tsv",
-        "data/datahi.tsv",
-        "data/databn.tsv",
-        "data/datamr.tsv"
-    ]
-    languages = ["te", "ml", "hi", "bn", "mr"]
-
     classifier = LanguageClassifier(file_paths, languages)
     classifier.load_data()
     x = classifier.prepare_tokenizer()
