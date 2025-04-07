@@ -8,36 +8,30 @@ from keras._tf_keras.keras.models import Model, load_model
 from keras._tf_keras.keras.layers import Input, Embedding, LSTM, Bidirectional, Dense, RepeatVector, TimeDistributed, Concatenate, Attention, Lambda
 from keras._tf_keras.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
-from datasets import load_dataset
+from datasets import Dataset
 from utils import clean_text, load_existing_model
 
-class HindiTransliterator:
-    def __init__(self, data_file="data/datahi.tsv", model_path="models/hindi_transliteration_model.keras"):
+class BaseTransliterator:
+    def __init__(self, data_file, model_path, source_tokens, target_tokens):
         """
-        Initializes the transliterator with dataset and model paths.
-        It also defines source tokens and Hindi tokens along with their tokenizers.
+        Generic transliterator class.
+        
+        Args:
+            data_file (str): Path to the TSV file with target data.
+            model_path (str): Path where the model is saved/loaded.
+            source_tokens (list): List of valid source (romanized) tokens.
+            target_tokens (list): List of valid target (native) tokens.
         """
         self.data_file = data_file
         self.model_path = model_path
+        self.source_tokens = source_tokens
+        self.target_tokens = target_tokens
 
-        # Define source tokens (romanized text) and initialize source tokenizer.
-        self.source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
+        # Initialize tokenizers
         self.source_tokenizer = Tokenizer(char_level=True, filters='')
-        self.source_tokenizer.fit_on_texts(self.source_tokens)
-
-        # Define Hindi tokens (Devanagari characters) and initialize target tokenizer.
-        self.hindi_tokens = [
-            # Independent vowels
-            'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ',
-            # Consonants
-            'क', 'ख', 'ग', 'घ', 'ङ', 'च', 'छ', 'ज', 'झ', 'ञ',
-            'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द', 'ध', 'न',
-            'प', 'फ', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'श', 'ष', 'स', 'ह',
-            # Matras / vowel modifiers and other signs
-            'ा', 'ि', 'ी', 'ु', 'ू', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः', '्', ' '
-        ]
+        self.source_tokenizer.fit_on_texts(source_tokens)
         self.target_tokenizer = Tokenizer(char_level=True, filters='')
-        self.target_tokenizer.fit_on_texts(self.hindi_tokens)
+        self.target_tokenizer.fit_on_texts(target_tokens)
 
         self.data = None
         self.max_seq_length = None
@@ -51,74 +45,59 @@ class HindiTransliterator:
 
     def load_dataset(self):
         """
-        Loads the dataset using Hugging Face's datasets package.
-        The TSV file is read as a CSV with tab delimiter and column names "hi" (native) and "en" (romanized).
+        Loads the dataset using pandas and converts it to a Hugging Face Dataset.
+        Assumes a TSV file with two columns: target (native) and source (romanized).
+        Skips malformed lines.
         """
-        dataset = load_dataset("csv", data_files=self.data_file, delimiter="\t", column_names=["hi", "en"])
-        self.data = dataset['train']
+        df = pd.read_csv(
+            self.data_file,
+            delimiter="\t",
+            header=None,
+            names=["target", "source"],
+            on_bad_lines="skip",
+            engine="python"
+        )
+        self.data = Dataset.from_pandas(df)
         return self.data
-
-    def filter_empty_rows(self, example):
-        """
-        Returns True if both 'hi' and 'en' fields are non-empty.
-        """
-        return (example['hi'] is not None and example['hi'].strip() != '') and \
-               (example['en'] is not None and example['en'].strip() != '')
-
-    def ensure_strings(self, example):
-        """
-        Ensures that the 'hi' and 'en' fields are strings.
-        """
-        example['hi'] = str(example['hi']) if example['hi'] is not None else ''
-        example['en'] = str(example['en']) if example['en'] is not None else ''
-        return example
-
-    def clean_text_fields(self, example):
-        """
-        Uses the shared clean_text function to clean both romanized ('en') and native ('hi') text.
-        For romanized text, only characters in source_tokens are kept.
-        For native text, only characters in hindi_tokens are kept.
-        """
-        example['en'] = clean_text(example['en'], allowed_chars=self.source_tokens, lower=True)
-        # For Hindi text, we do not lower-case (to preserve case if needed)
-        example['hi'] = clean_text(example['hi'], allowed_chars=self.hindi_tokens, lower=False)
-        return example
 
     def preprocess_data(self):
         """
         Runs the full preprocessing pipeline:
           1. Loads the dataset.
-          2. Filters empty rows.
-          3. Ensures all fields are strings.
-          4. Cleans the text.
+          2. Filters out empty rows.
+          3. Ensures fields are strings.
+          4. Cleans both source and target text using language-specific allowed tokens.
         """
         self.load_dataset()
-        self.data = self.data.filter(self.filter_empty_rows)
-        self.data = self.data.map(self.ensure_strings)
-        self.data = self.data.map(self.clean_text_fields)
+        self.data = self.data.filter(lambda ex: ex['target'] and ex['source'] and ex['target'].strip() and ex['source'].strip())
+        self.data = self.data.map(lambda ex: {"target": str(ex["target"]), "source": str(ex["source"])})
+        self.data = self.data.map(lambda ex: {
+            "target": clean_text(ex["target"], allowed_chars=self.target_tokens, lower=False),
+            "source": clean_text(ex["source"], allowed_chars=self.source_tokens, lower=True)
+        })
         return self.data
 
     def determine_max_seq_length(self):
         """
-        Determines the maximum sequence length among both romanized and Hindi texts.
+        Determines the maximum sequence length among source and target texts.
         """
         def calc_lengths(example):
-            return {'hi_length': len(example['hi']), 'en_length': len(example['en'])}
+            return {'target_length': len(example['target']), 'source_length': len(example['source'])}
         lengths = self.data.map(calc_lengths)
-        max_hi_length = max(lengths['hi_length'])
-        max_en_length = max(lengths['en_length'])
-        self.max_seq_length = max(max_hi_length, max_en_length)
+        max_target = max(lengths['target_length'])
+        max_source = max(lengths['source_length'])
+        self.max_seq_length = max(max_target, max_source)
         print("Max sequence length:", self.max_seq_length)
         return self.max_seq_length
 
     def prepare_sequences(self):
         """
-        Converts texts to sequences using the tokenizers and pads them to max_seq_length.
+        Converts texts to sequences using tokenizers and pads them.
         """
-        source_sequences = self.source_tokenizer.texts_to_sequences(self.data['en'])
+        source_sequences = self.source_tokenizer.texts_to_sequences(self.data['source'])
         self.X = pad_sequences(source_sequences, maxlen=self.max_seq_length, padding='post')
 
-        target_sequences = self.target_tokenizer.texts_to_sequences(self.data['hi'])
+        target_sequences = self.target_tokenizer.texts_to_sequences(self.data['target'])
         self.y = pad_sequences(target_sequences, maxlen=self.max_seq_length, padding='post')
         return self.X, self.y
 
@@ -133,32 +112,32 @@ class HindiTransliterator:
 
     def build_model(self, embedding_dim=64, hidden_units=128):
         """
-        Builds the encoder-decoder transliteration model with attention.
+        Builds an encoder-decoder model with attention.
         """
         # Encoder.
         encoder_input = Input(shape=(self.max_seq_length,), name='encoder_input')
-        encoder_embedding = Embedding(input_dim=len(self.source_tokenizer.word_index) + 1,
+        encoder_embedding = Embedding(input_dim=len(self.source_tokenizer.word_index)+1,
                                       output_dim=embedding_dim,
                                       name='encoder_embedding')(encoder_input)
         encoder_lstm = Bidirectional(LSTM(hidden_units, return_sequences=True, name='encoder_lstm'))(encoder_embedding)
         encoder_dense = Dense(hidden_units, activation='relu', name='encoder_dense')(encoder_lstm)
-
+        
         # Extract the last time step using a Lambda layer.
         get_last_step = Lambda(lambda x: x[:, -1, :], name='get_last_step')
         last_encoder_output = get_last_step(encoder_dense)
-
+        
         # Decoder.
         decoder_input = RepeatVector(self.max_seq_length, name='decoder_repeat')(last_encoder_output)
         decoder_lstm = LSTM(hidden_units, return_sequences=True, name='decoder_lstm')(decoder_input)
-
+        
         # Attention mechanism.
         attn_output = Attention(name='attention')([decoder_lstm, encoder_dense])
         decoder_concat = Concatenate(name='concat')([decoder_lstm, attn_output])
         decoder_output = TimeDistributed(
-            Dense(len(self.target_tokenizer.word_index) + 1, activation='softmax'),
+            Dense(len(self.target_tokenizer.word_index)+1, activation='softmax'),
             name='time_distributed'
         )(decoder_concat)
-
+        
         self.model = Model(encoder_input, decoder_output)
         self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         self.model.summary()
@@ -184,15 +163,14 @@ class HindiTransliterator:
 
     def load_existing_model(self):
         """
-        Loads an existing model from the given model_path using the shared function.
+        Loads an existing model using the shared function.
         """
         self.model = load_existing_model(self.model_path)
         return self.model
 
     def transliterate(self, input_text):
         """
-        Transliterates an input string while preserving non-alphabetic characters.
-        The method tokenizes the input, predicts using the model, and decodes the output.
+        Transliterates an input string while preserving non-token characters.
         """
         tokens_and_non_tokens = re.findall(r"([a-zA-Z]+)|([^a-zA-Z]+)", input_text)
         transliterated_text = ""
@@ -202,7 +180,7 @@ class HindiTransliterator:
                 padded = pad_sequences([seq], maxlen=self.max_seq_length, padding='post')
                 pred = self.model.predict(padded)
                 pred_indices = np.argmax(pred, axis=-1)[0]
-                word = ''.join([self.target_tokenizer.index_word.get(idx, '') 
+                word = ''.join([self.target_tokenizer.index_word.get(idx, '')
                                 for idx in pred_indices if idx != 0])
                 transliterated_text += word
             elif non_token:
@@ -211,11 +189,7 @@ class HindiTransliterator:
 
     def run_pipeline(self, train_new_model=False, epochs=10, batch_size=64):
         """
-        Executes the full pipeline:
-          1. Data preprocessing.
-          2. Determining maximum sequence length.
-          3. Preparing sequences and splitting the dataset.
-          4. Building and training (or loading) the model.
+        Executes the full pipeline: preprocess, prepare sequences, split data, and build/train (or load) the model.
         """
         self.preprocess_data()
         self.determine_max_seq_length()
@@ -227,16 +201,46 @@ class HindiTransliterator:
         else:
             self.load_existing_model()
 
+# Language-specific subclasses:
+
+class HindiTransliterator(BaseTransliterator):
+    def __init__(self, data_file="data/datahi.tsv", model_path="models/hindi_transliteration_model.keras"):
+        source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
+        hindi_tokens = [
+            'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ',
+            'क', 'ख', 'ग', 'घ', 'ङ', 'च', 'छ', 'ज', 'झ', 'ञ',
+            'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द', 'ध', 'न',
+            'प', 'फ', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'श', 'ष', 'स', 'ह',
+            'ा', 'ि', 'ी', 'ु', 'ू', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः', '्', ' '
+        ]
+        super().__init__(data_file, model_path, source_tokens, hindi_tokens)
+
+class TeluguTransliterator(BaseTransliterator):
+    def __init__(self, data_file="data/datate.tsv", model_path="models/telugu_transliteration_model.keras"):
+        source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
+        telugu_tokens = [
+            'అ', 'ఆ', 'ఇ', 'ఈ', 'ఉ', 'ఊ', 'ఋ', 'ఎ', 'ఏ', 'ఐ', 'ఒ', 'ఓ', 'ఔ',
+            'క', 'ఖ', 'గ', 'ఘ', 'ఙ',
+            'చ', 'ఛ', 'జ', 'ఝ', 'ఞ',
+            'ట', 'ఠ', 'డ', 'ఢ', 'ణ',
+            'త', 'థ', 'ద', 'ధ', 'న',
+            'ప', 'ఫ', 'బ', 'భ', 'మ',
+            'య', 'ర', 'ల', 'వ',
+            'శ', 'ష', 'స', 'హ',
+            'ా', 'ి', 'ీ', 'ు', 'ూ', 'ృ', 'ే', 'ై', 'ొ', 'ో', 'ౌ', 'ం', 'ః', '్', ' '
+        ]
+        super().__init__(data_file, model_path, source_tokens, telugu_tokens)
+
+# Example usage:
 if __name__ == "__main__":
-    # Initialize the transliterator.
-    transliterator = HindiTransliterator(
-        data_file="data/datahi.tsv",
-        model_path="models/hindi_transliteration_model.keras"
-    )
-    # Set train_new_model=True to train a new model, or False to load an existing one.
-    transliterator.run_pipeline(train_new_model=False, epochs=10, batch_size=64)
+    # For Hindi
+    hindi_transliterator = HindiTransliterator()
+    hindi_transliterator.run_pipeline(train_new_model=False, epochs=10, batch_size=64)
+    test_text_hindi = "aur bhai kaisa hain?"
+    print("Hindi Predicted Transliteration:", hindi_transliterator.transliterate(test_text_hindi))
     
-    # Test the transliteration on an example input.
-    test_text = "aur bhai kaisa hain?"
-    result = transliterator.transliterate(test_text)
-    print("Predicted Transliteration:", result)
+    # For Telugu
+    telugu_transliterator = TeluguTransliterator()
+    telugu_transliterator.run_pipeline(train_new_model=False, epochs=10, batch_size=64)
+    test_text_telugu = "tellani pilly"
+    print("Telugu Predicted Transliteration:", telugu_transliterator.transliterate(test_text_telugu))

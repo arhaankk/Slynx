@@ -1,14 +1,16 @@
+import tensorflow as tf
 import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from keras._tf_keras.keras.preprocessing.text import Tokenizer
+from keras._tf_keras.keras.preprocessing.text import Tokenizer
+from keras._tf_keras.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Embedding, LSTM, Bidirectional, Dense, RepeatVector, TimeDistributed, Concatenate, Attention
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras._tf_keras.keras.models import Model, load_model
+from keras._tf_keras.keras.layers import Input, Embedding, LSTM, Bidirectional, Dense, RepeatVector, TimeDistributed, Concatenate, Attention
+from keras._tf_keras.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.python.keras.layers import Dense
 
 # 1. Define source tokens (romanized text)
 source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
