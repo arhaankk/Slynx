@@ -1,4 +1,3 @@
-import argparse
 import os
 from speech import SpeechGenerator
 from transliterator import HindiTransliterator, TeluguTransliterator
