@@ -201,7 +201,7 @@ class BaseTransliterator:
         else:
             self.load_existing_model()
 
-# Language-specific subclasses:
+
 
 class HindiTransliterator(BaseTransliterator):
     def __init__(self, data_file="data/datahi.tsv", model_path="models/hindi_transliteration_model.keras"):
@@ -231,7 +231,7 @@ class TeluguTransliterator(BaseTransliterator):
         ]
         super().__init__(data_file, model_path, source_tokens, telugu_tokens)
 
-# Example usage:
+
 if __name__ == "__main__":
     # For Hindi
     hindi_transliterator = HindiTransliterator()
