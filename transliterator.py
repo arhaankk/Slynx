@@ -152,14 +152,14 @@ class BaseTransliterator:
             ModelCheckpoint(self.model_path, monitor='val_loss', save_best_only=True),
             ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
         ]
-        self.model.fit(
+        history = self.model.fit(
             self.X_train, np.expand_dims(self.y_train, -1),
             validation_data=(self.X_val, np.expand_dims(self.y_val, -1)),
             epochs=epochs,
             batch_size=batch_size,
             callbacks=callbacks
         )
-        return self.model
+        return history
 
     def load_existing_model(self):
         """
@@ -197,9 +197,11 @@ class BaseTransliterator:
         self.train_val_split()
         if train_new_model or not os.path.exists(self.model_path):
             self.build_model()
-            self.train_model(epochs=epochs, batch_size=batch_size)
+            history = self.train_model(epochs=epochs, batch_size=batch_size)
+            return history
         else:
             self.load_existing_model()
+            return None
 
 
 
