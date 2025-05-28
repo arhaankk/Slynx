@@ -118,21 +118,27 @@ class LanguageClassifier:
         pred = self.model.predict(padded)
         label = self.label_encoder.inverse_transform([np.argmax(pred)])
         return label[0]
-if __name__ == "__main__":
     
+    def load_or_train_model(self, x, y):
+        """
+        Loads an existing model if available, else builds and trains a new one.
+        """
+        if os.path.exists(self.model_path):
+            print("Loading existing model from", self.model_path)
+            self.model = load_existing_model(self.model_path)
+        else:
+            print("Model file not found. Building and training a new model.")
+            self.build_model()
+            self.train_model(x, y)
+
+if __name__ == "__main__":
     classifier = LanguageClassifier(file_paths, languages)
     classifier.load_data()
     x = classifier.prepare_tokenizer()
     y = classifier.encode_labels()
-
-    if os.path.exists(classifier.model_path):
-        print("Loading existing model from", classifier.model_path)
-        classifier.model = load_existing_model(classifier.model_path)
-    else:
-        print("Model file not found. Building and training a new model.")
-        classifier.build_model()
-        classifier.train_model(x, y)
+    classifier.load_or_train_model(x, y)
 
     text = "Tu kasa aahes?"
     predicted_language = classifier.predict_language(text)
     print("Predicted language:", predicted_language)
+
