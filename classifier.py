@@ -105,8 +105,15 @@ class LanguageClassifier:
             ModelCheckpoint(self.model_path, monitor='val_loss', save_best_only=True)
         ]
 
-        self.model.fit(x, y, validation_data=(x_val, y_val), epochs=epochs, batch_size=batch_size, callbacks=callbacks)
+        self.model.fit(x_train, y_train, validation_data=(x_val, y_val), 
+                    epochs=epochs, batch_size=batch_size, callbacks=callbacks)
+
+        # 🔽 Save model after training
+        self.model.save(self.model_path)
+        print(f"Trained model saved at {self.model_path}")
+
         return self.model
+
 
     def predict_language(self, text):
         """
