@@ -43,7 +43,7 @@ You can **download** or **directly use** our pretrained models for:
 ### To Run The Pipeline
 ```bash
 # Step 1: Set up and activate virtual environment
-python3.12.10 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 
 # Step 3: Install dependencies
@@ -68,10 +68,10 @@ source venv/bin/activate
 | NLP & ML            | Hugging Face Transformers, scikit-learn                                          |
 | Data Handling       | pandas, datasets                                                                 |
 | Speech Synthesis    | [Parler-TTS](https://github.com/huggingface/parler-tts)                          |
-| Model Types         | Embedding, Bidirectional LSTM (stacked), Dense Layers, Dropout                   |
+| Model Types         | Embedding, Encoding-Decoding (Seq2Seq), Bidirectional LSTM, Attention, Dense     |
 | Dataset             | [Dakshina Dataset](https://github.com/google-research-datasets/dakshina)         |
 | Data Format         | TSV                                                                              |
-| Deployment/Source   | Git (with `git+https` for installing Parler-TTS)                                 |
+
 
 ### Extend Support (To add new languages)
 
