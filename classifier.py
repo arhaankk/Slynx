@@ -76,19 +76,20 @@ class LanguageClassifier:
         return y
 
     def build_model(self, embedding_dim=32, hidden_units=64):
-        """
-        Builds and compiles the LSTM-based classifier model.
-        """
         vocab_size = len(self.tokenizer.word_index) + 1
         num_classes = len(self.label_encoder.classes_)
+
         self.model = Sequential([
             Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=self.max_seq_length),
             LSTM(hidden_units),
             Dropout(0.5),
             Dense(num_classes, activation='softmax')
         ])
+
         self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        self.model.build(input_shape=(None, self.max_seq_length))
         self.model.summary()
+
         return self.model
 
     def train_model(self, x, y, batch_size=64, epochs=10):
