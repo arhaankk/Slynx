@@ -1,22 +1,42 @@
-from speech import SpeechGenerator
-from convertor import TransliterateText
-from classify import LanguageDetector
-
 import os
-from indic_transliteration import sanscript
+from speech import SpeechGenerator
+from transliterator import HindiTransliterator, TeluguTransliterator
+from classifier import LanguageClassifier, languages, file_paths
 
-class App:
-    def __init__(self):
-        self.lang_detector = LanguageDetector()
-        self.transliterator = TransliterateText()
-        self.speech_generator = SpeechGenerator()
-    
-    def launch(self, text: str):
-        description = "Rohit is an 18 year old boy that likes to speak in informal hindi." 
-        detected_lang = self.lang_detector.detect_lang(text)
-        transliterated_text = self.transliterator.transliterate_text(text, sanscript.HK, sanscript.GURMUKHI)
-        self.speech_generator.generate_speech(transliterated_text, description)
+
+
+def main():
+    input_text = "tu bahut acha admi hai brother!"  
+    description = "Rohit's voice is clear and friendly with a moderate pace."
+    output_filename = "output.wav"
+
+    # Step 1: Transliteration.
+    transliterator = HindiTransliterator()
+    transliterator.run_pipeline()
+    transliterated_text = transliterator.transliterate(input_text)
+    print("Transliterated text:", transliterated_text)
+
+    # Step 2: Classification.
+    classifier = LanguageClassifier(file_paths, languages)
+    classifier.load_data()
+    x = classifier.prepare_tokenizer()
+    y = classifier.encode_labels()
+
+
+    classifier.load_or_train_model(x, y)
+
+    classification_result = classifier.predict_language(transliterated_text)
+    print("Classification result:", classification_result)
+
+    # Step 3: Speech synthesis.
+    combined_description = f"{description} Classified as: {classification_result}"
+    tts_generator = SpeechGenerator()
+    tts_generator.generate_speech(
+        prompt=transliterated_text,
+        description=combined_description,
+        output_filename=output_filename
+    )
+    print(f"Audio generated and saved as {output_filename}")
 
 if __name__ == "__main__":
-    app = App()
-    app.launch("aap kaise ho")
+    main()

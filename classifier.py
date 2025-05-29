@@ -1,103 +1,152 @@
-import re
+import os
 import numpy as np
 import pandas as pd
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras._tf_keras.keras.preprocessing.text import Tokenizer
+from keras._tf_keras.keras.preprocessing.sequence import pad_sequences
+from keras._tf_keras.keras.models import Sequential
+from keras._tf_keras.keras.layers import Embedding, LSTM, Dense, Dropout
+from keras._tf_keras.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.utils import class_weight
+from utils import clean_text, load_dataset, compute_class_weights, load_existing_model
 
-# --- Load and label each TSV file ---
-def load_and_label(file_path, language):
-    df = pd.read_csv(file_path, delimiter="\t", header=None, names=['native', 'roman'],
-                     encoding='utf-8', dtype=str, on_bad_lines='skip')
-    df['language'] = language
-    return df
-
-# Example: Load Telugu and Malayalam data
-df_te = load_and_label("data/datate.tsv", "te")
-df_ml = load_and_label("data/dataml.tsv", "ml")
-df_hi = load_and_label("data/datahi.tsv", "hi")
-df_bn = load_and_label("data/databn.tsv", "bn")
-df_mr = load_and_label("data/datamr.tsv", "mr")
-
-# --- Clean the romanized text ---
-def clean_text(text):
-    if not isinstance(text, str):
-        text = str(text)
-    text = text.lower()
-    text = re.sub(r'[^a-z0-9\s]+', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
-
-df_te['text'] = df_te['roman'].apply(clean_text)
-df_ml['text'] = df_ml['roman'].apply(clean_text)
-df_hi['text'] = df_hi['roman'].apply(clean_text)
-df_mr['text'] = df_mr['roman'].apply(clean_text)
-df_bn['text'] = df_bn['roman'].apply(clean_text)
-# --- Combine the datasets ---
-data = pd.concat([df_te[['text', 'language']], df_ml[['text', 'language']], df_mr[['text', 'language']], df_hi[['text', 'language']], df_bn[['text', 'language']]], ignore_index=True)
-print("Data distribution:")
-print(data['language'].value_counts())
-
-# --- Tokenize the text ---
-tokenizer = Tokenizer(char_level=False)
-tokenizer.fit_on_texts(data['text'])
-sequences = tokenizer.texts_to_sequences(data['text'])
-max_seq_length = max(len(seq) for seq in sequences)
-x = pad_sequences(sequences, maxlen=max_seq_length, padding='post')
-
-# # --- Encode language labels ---
-label_encoder = LabelEncoder()
-y = label_encoder.fit_transform(data['language'])
-print("Languages found:", label_encoder.classes_)
-x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
-#  Comment from here to load model
-# --- Compute class weights for balanced training ---
-weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
-class_weights = dict(enumerate(weights))
-print("Class weights:", class_weights)
-
-# --- Define the classifier model ---
-embedding_dim = 32
-hidden_units = 64
-vocab_size = len(tokenizer.word_index) + 1
-num_classes = len(label_encoder.classes_)
-
-model = Sequential([
-    Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_shape=(max_seq_length,)),
-    LSTM(hidden_units),
-    Dropout(0.5),
-    Dense(num_classes, activation='softmax')
-])
-
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.summary()
-
-# --- Set up callbacks and train the classifier ---
-callbacks = [
-    EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
-    ModelCheckpoint('language_classifier.h5', monitor='val_loss', save_best_only=True)
+languages = ["te", "ml", "hi", "bn", "mr"]
+file_paths = [
+    "data/datate.tsv",
+    "data/dataml.tsv",
+    "data/datahi.tsv",
+    "data/databn.tsv",
+    "data/datamr.tsv"
 ]
 
-model.fit(x, y, validation_data=(x_val, y_val), epochs=10, batch_size=64, callbacks=callbacks)
-# To load the model
-# model = load_model('language_classifier.h5')
+class LanguageClassifier:
+    def __init__(self, file_paths, languages, model_path='models/language_classifier.h5'):
+        """
+        Initializes the classifier with file paths and corresponding language labels.
+        """
+        self.file_paths = file_paths
+        self.languages = languages
+        self.model_path = model_path
+        self.data = None
+        self.tokenizer = None
+        self.label_encoder = None
+        self.max_seq_length = None
+        self.model = None
 
-# --- Define prediction function ---
-def predict_language(text, model, tokenizer, label_encoder, max_seq_length):
-    text = text.lower()
-    text = re.sub(r'[^a-z0-9\s]+', '', text)
-    seq = tokenizer.texts_to_sequences([text])
-    padded = pad_sequences(seq, maxlen=max_seq_length, padding='post')
-    pred = model.predict(padded)
-    label = label_encoder.inverse_transform([np.argmax(pred)])
-    return label[0]
+    def load_and_label(self, file_path, language):
+        """
+        Loads a TSV file, labels it with the given language, and returns a DataFrame.
+        Uses the common load_tsv function.
+        """
+        df = load_dataset(file_path, delimiter="\t", header=None, names=['native', 'roman'])
+        df['language'] = language
+        return df
 
-# --- Test the classifier with a sample input ---
-test_text = "Tu kasa aahes? Mi mast ahe! Bhetaycha ka?"
-predicted_language = predict_language(test_text, model, tokenizer, label_encoder, max_seq_length)
-print("Predicted language:", predicted_language)
+    def load_data(self):
+        """
+        Loads data from all provided file paths, cleans the text using the shared clean_text
+        function, and concatenates the datasets into one DataFrame.
+        """
+        dataframes = [self.load_and_label(fp, lang) for fp, lang in zip(self.file_paths, self.languages)]
+        for df in dataframes:
+            df['text'] = df['roman'].apply(lambda x: clean_text(x))
+        self.data = pd.concat([df[['text', 'language']] for df in dataframes], ignore_index=True)
+        print("Data distribution:")
+        print(self.data['language'].value_counts())
+
+    def prepare_tokenizer(self):
+        """
+        Fits a tokenizer on the text data and pads sequences to the maximum sequence length.
+        Returns the padded sequences.
+        """
+        self.tokenizer = Tokenizer(char_level=False)
+        self.tokenizer.fit_on_texts(self.data['text'])
+        sequences = self.tokenizer.texts_to_sequences(self.data['text'])
+        self.max_seq_length = max(len(seq) for seq in sequences)
+        x = pad_sequences(sequences, maxlen=self.max_seq_length, padding='post')
+        return x
+
+    def encode_labels(self):
+        """
+        Encodes the language labels using a LabelEncoder and returns the encoded labels.
+        """
+        self.label_encoder = LabelEncoder()
+        y = self.label_encoder.fit_transform(self.data['language'])
+        print("Languages found:", self.label_encoder.classes_)
+        return y
+
+    def build_model(self, embedding_dim=32, hidden_units=64):
+        vocab_size = len(self.tokenizer.word_index) + 1
+        num_classes = len(self.label_encoder.classes_)
+
+        self.model = Sequential([
+            Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=self.max_seq_length),
+            LSTM(hidden_units),
+            Dropout(0.5),
+            Dense(num_classes, activation='softmax')
+        ])
+
+        self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        self.model.build(input_shape=(None, self.max_seq_length))
+        self.model.summary()
+
+        return self.model
+
+    def train_model(self, x, y, batch_size=64, epochs=10):
+        """
+        Splits the data, computes class weights using the shared compute_class_weights function,
+        and trains the model with early stopping and model checkpoint callbacks.
+        """
+        x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+        weights = compute_class_weights(y)
+        print("Class weights:", weights)
+
+        callbacks = [
+            EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
+            ModelCheckpoint(self.model_path, monitor='val_loss', save_best_only=True)
+        ]
+
+        self.model.fit(x_train, y_train, validation_data=(x_val, y_val), 
+                    epochs=epochs, batch_size=batch_size, callbacks=callbacks)
+
+        # 🔽 Save model after training
+        self.model.save(self.model_path)
+        print(f"Trained model saved at {self.model_path}")
+
+        return self.model
+
+
+    def predict_language(self, text):
+        """
+        Cleans the input text, tokenizes it, pads the sequence, and predicts the language.
+        """
+        cleaned_text = clean_text(text)
+        seq = self.tokenizer.texts_to_sequences([cleaned_text])
+        padded = pad_sequences(seq, maxlen=self.max_seq_length, padding='post')
+        pred = self.model.predict(padded)
+        label = self.label_encoder.inverse_transform([np.argmax(pred)])
+        return label[0]
+    
+    def load_or_train_model(self, x, y):
+        """
+        Loads an existing model if available, else builds and trains a new one.
+        """
+        if os.path.exists(self.model_path):
+            print("Loading existing model from", self.model_path)
+            self.model = load_existing_model(self.model_path)
+        else:
+            print("Model file not found. Building and training a new model.")
+            self.build_model()
+            self.train_model(x, y)
+
+if __name__ == "__main__":
+    classifier = LanguageClassifier(file_paths, languages)
+    classifier.load_data()
+    x = classifier.prepare_tokenizer()
+    y = classifier.encode_labels()
+    classifier.load_or_train_model(x, y)
+
+    text = "Tu kasa aahes?"
+    predicted_language = classifier.predict_language(text)
+    print("Predicted language:", predicted_language)
+
