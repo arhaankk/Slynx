@@ -84,5 +84,3 @@ source venv/bin/activate
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 **Note:** This project is for demonstration and educational purposes only. All rights to dataset and model usage belong to their respective owners.
-
-
