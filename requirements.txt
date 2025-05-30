@@ -4,3 +4,5 @@ git+https://github.com/huggingface/parler-tts.git
 tensorflow
 pandas
 datasets
+fastapi
+uvicorn
