@@ -6,8 +6,17 @@ from classifier import LanguageClassifier, languages, file_paths
 
 
 def main():
-    input_text = "tu bahut acha admi hai brother!"  
-    description = "Rohit's voice is clear and friendly with a moderate pace."
+
+    voice_list = {
+        "bn": "Arjun",
+        "hi": "Rohit",
+        "ml": "Harish",
+        "te": "Prakash",
+        "mr": "Sanjay"
+    }
+
+    input_text = "Maine aaj subah apne doston ke saath park mein cricket khela, fir hum sab chai peene gaye."  
+    
     output_filename = "output.wav"
 
     # Step 1: Transliteration.
@@ -28,6 +37,11 @@ def main():
     classification_result = classifier.predict_language(transliterated_text)
     print("Classification result:", classification_result)
 
+
+    speaker = voice_list.get(classification_result)
+    
+    description = f"{speaker}'s voice is clear and friendly with a moderate pace."
+    print(f"SPEAKER IS {speaker}")
     # Step 3: Speech synthesis.
     combined_description = f"{description} Classified as: {classification_result}"
     tts_generator = SpeechGenerator()
