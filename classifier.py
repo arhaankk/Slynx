@@ -6,6 +6,7 @@ from keras._tf_keras.keras.preprocessing.sequence import pad_sequences
 from keras._tf_keras.keras.models import Sequential
 from keras._tf_keras.keras.layers import Embedding, LSTM, Dense, Dropout
 from keras._tf_keras.keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras._tf_keras.keras.layers import Bidirectional
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from utils import clean_text, load_dataset, compute_class_weights, load_existing_model
@@ -81,7 +82,11 @@ class LanguageClassifier:
 
         self.model = Sequential([
             Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=self.max_seq_length),
-            LSTM(hidden_units),
+            Bidirectional(LSTM(hidden_units, return_sequences=True)),
+            Dropout(0.5),
+            Bidirectional(LSTM(hidden_units)),
+            Dropout(0.5),
+            Dense(64, activation='relu'),
             Dropout(0.5),
             Dense(num_classes, activation='softmax')
         ])

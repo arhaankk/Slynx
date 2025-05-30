@@ -13,21 +13,11 @@ from utils import clean_text, load_existing_model
 
 class BaseTransliterator:
     def __init__(self, data_file, model_path, source_tokens, target_tokens):
-        """
-        Generic transliterator class.
-        
-        Args:
-            data_file (str): Path to the TSV file with target data.
-            model_path (str): Path where the model is saved/loaded.
-            source_tokens (list): List of valid source (romanized) tokens.
-            target_tokens (list): List of valid target (native) tokens.
-        """
         self.data_file = data_file
         self.model_path = model_path
         self.source_tokens = source_tokens
         self.target_tokens = target_tokens
 
-        # Initialize tokenizers
         self.source_tokenizer = Tokenizer(char_level=True, filters='')
         self.source_tokenizer.fit_on_texts(source_tokens)
         self.target_tokenizer = Tokenizer(char_level=True, filters='')
@@ -44,11 +34,6 @@ class BaseTransliterator:
         self.model = None
 
     def load_dataset(self):
-        """
-        Loads the dataset using pandas and converts it to a Hugging Face Dataset.
-        Assumes a TSV file with two columns: target (native) and source (romanized).
-        Skips malformed lines.
-        """
         df = pd.read_csv(
             self.data_file,
             delimiter="\t",
@@ -61,13 +46,6 @@ class BaseTransliterator:
         return self.data
 
     def preprocess_data(self):
-        """
-        Runs the full preprocessing pipeline:
-          1. Loads the dataset.
-          2. Filters out empty rows.
-          3. Ensures fields are strings.
-          4. Cleans both source and target text using language-specific allowed tokens.
-        """
         self.load_dataset()
         self.data = self.data.filter(lambda ex: ex['target'] and ex['source'] and ex['target'].strip() and ex['source'].strip())
         self.data = self.data.map(lambda ex: {"target": str(ex["target"]), "source": str(ex["source"])})
@@ -78,9 +56,6 @@ class BaseTransliterator:
         return self.data
 
     def determine_max_seq_length(self):
-        """
-        Determines the maximum sequence length among source and target texts.
-        """
         def calc_lengths(example):
             return {'target_length': len(example['target']), 'source_length': len(example['source'])}
         lengths = self.data.map(calc_lengths)
@@ -91,9 +66,6 @@ class BaseTransliterator:
         return self.max_seq_length
 
     def prepare_sequences(self):
-        """
-        Converts texts to sequences using tokenizers and pads them.
-        """
         source_sequences = self.source_tokenizer.texts_to_sequences(self.data['source'])
         self.X = pad_sequences(source_sequences, maxlen=self.max_seq_length, padding='post')
 
@@ -102,51 +74,36 @@ class BaseTransliterator:
         return self.X, self.y
 
     def train_val_split(self, test_size=0.1, random_state=42):
-        """
-        Splits the dataset into training and validation sets.
-        """
         self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(
             self.X, self.y, test_size=test_size, random_state=random_state
         )
         return self.X_train, self.X_val, self.y_train, self.y_val
 
     def build_model(self, embedding_dim=64, hidden_units=128):
-        """
-        Builds an encoder-decoder model with attention.
-        """
-        # Encoder.
         encoder_input = Input(shape=(self.max_seq_length,), name='encoder_input')
-        encoder_embedding = Embedding(input_dim=len(self.source_tokenizer.word_index)+1,
+        encoder_embedding = Embedding(input_dim=len(self.source_tokenizer.word_index) + 1,
                                       output_dim=embedding_dim,
                                       name='encoder_embedding')(encoder_input)
         encoder_lstm = Bidirectional(LSTM(hidden_units, return_sequences=True, name='encoder_lstm'))(encoder_embedding)
         encoder_dense = Dense(hidden_units, activation='relu', name='encoder_dense')(encoder_lstm)
-        
-        # Extract the last time step using a Lambda layer.
-        get_last_step = Lambda(lambda x: x[:, -1, :], name='get_last_step')
-        last_encoder_output = get_last_step(encoder_dense)
-        
-        # Decoder.
-        decoder_input = RepeatVector(self.max_seq_length, name='decoder_repeat')(last_encoder_output)
+
+        get_last_step = Lambda(lambda x: x[:, -1, :], name='get_last_step')(encoder_dense)
+        decoder_input = RepeatVector(self.max_seq_length, name='decoder_repeat')(get_last_step)
         decoder_lstm = LSTM(hidden_units, return_sequences=True, name='decoder_lstm')(decoder_input)
-        
-        # Attention mechanism.
+
         attn_output = Attention(name='attention')([decoder_lstm, encoder_dense])
         decoder_concat = Concatenate(name='concat')([decoder_lstm, attn_output])
         decoder_output = TimeDistributed(
-            Dense(len(self.target_tokenizer.word_index)+1, activation='softmax'),
+            Dense(len(self.target_tokenizer.word_index) + 1, activation='softmax'),
             name='time_distributed'
         )(decoder_concat)
-        
+
         self.model = Model(encoder_input, decoder_output)
         self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         self.model.summary()
         return self.model
 
     def train_model(self, epochs=10, batch_size=64):
-        """
-        Trains the model using early stopping, model checkpointing, and learning rate reduction.
-        """
         callbacks = [
             EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
             ModelCheckpoint(self.model_path, monitor='val_loss', save_best_only=True),
@@ -162,16 +119,10 @@ class BaseTransliterator:
         return history
 
     def load_existing_model(self):
-        """
-        Loads an existing model using the shared function.
-        """
         self.model = load_existing_model(self.model_path)
         return self.model
 
     def transliterate(self, input_text):
-        """
-        Transliterates an input string while preserving non-token characters.
-        """
         tokens_and_non_tokens = re.findall(r"([a-zA-Z]+)|([^a-zA-Z]+)", input_text)
         transliterated_text = ""
         for token, non_token in tokens_and_non_tokens:
@@ -188,9 +139,6 @@ class BaseTransliterator:
         return transliterated_text
 
     def run_pipeline(self, train_new_model=False, epochs=10, batch_size=64):
-        """
-        Executes the full pipeline: preprocess, prepare sequences, split data, and build/train (or load) the model.
-        """
         self.preprocess_data()
         self.determine_max_seq_length()
         self.prepare_sequences()
@@ -204,7 +152,6 @@ class BaseTransliterator:
             return None
 
 
-
 class HindiTransliterator(BaseTransliterator):
     def __init__(self, data_file="data/datahi.tsv", model_path="models/hindi_transliteration_model.keras"):
         source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
@@ -216,6 +163,7 @@ class HindiTransliterator(BaseTransliterator):
             'ा', 'ि', 'ी', 'ु', 'ू', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः', '्', ' '
         ]
         super().__init__(data_file, model_path, source_tokens, hindi_tokens)
+
 
 class TeluguTransliterator(BaseTransliterator):
     def __init__(self, data_file="data/datate.tsv", model_path="models/telugu_transliteration_model.keras"):
@@ -235,14 +183,10 @@ class TeluguTransliterator(BaseTransliterator):
 
 
 if __name__ == "__main__":
-    # For Hindi
     hindi_transliterator = HindiTransliterator()
     hindi_transliterator.run_pipeline(train_new_model=False, epochs=10, batch_size=64)
-    test_text_hindi = "aur bhai kaisa hain?"
-    print("Hindi Predicted Transliteration:", hindi_transliterator.transliterate(test_text_hindi))
-    
-    # For Telugu
+    print("Hindi Predicted Transliteration:", hindi_transliterator.transliterate("aur bhai kaisa hain?"))
+
     telugu_transliterator = TeluguTransliterator()
     telugu_transliterator.run_pipeline(train_new_model=False, epochs=10, batch_size=64)
-    test_text_telugu = "tellani pilly"
-    print("Telugu Predicted Transliteration:", telugu_transliterator.transliterate(test_text_telugu))
+    print("Telugu Predicted Transliteration:", telugu_transliterator.transliterate("tellani pilly"))
