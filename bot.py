@@ -27,4 +27,45 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     input_text = update.message.text
+    print(f"User Input: {input_text}")
+
+    transliterator.run_pipeline()
+    transliterated_text = transliterator.transliterate(input_text)
+    print(f"Transliterated Text: {transliterated_text}")
+
+    lang = classifier.predict_language(transliterated_text)
+
+    print(f"Predicted Language: {lang}")
+
+    speaker = voice_list.get(lang)
+    description = f"{speaker}'s voice is clear and friendly with a moderate pace."
+
+    output_filename = "output.wav"
+    tts_generator.generate_speech(
+        prompt=transliterated_text,
+        description=description,
+        output_filename=output_filename
+    )
+
+    print(f"Generated audio: {output_filename}")
+
+    await update.message.reply_voice(voice=open(output_filename, 'rb'))
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+    import os
+    load_dotenv()
+
+    TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not TELEGRAM_TOKEN:
+        raise ValueError("TELEGRAM_BOT_TOKEN not set in environment variables")
     
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("Telegram Bot is running...")
+    app.run_polling()
+
+
