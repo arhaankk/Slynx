@@ -15,7 +15,7 @@ def main():
         "mr": "Sanjay"
     }
 
-    input_text = "Maine aaj subah apne doston ke saath park mein cricket khela, fir hum sab chai peene gaye."  
+    input_text = "Mera brother kal Delhi se wapas aaya."  
     
     output_filename = "output.wav"
 

@@ -1,9 +1,10 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
-
 from speech import SpeechGenerator
 from transliterator import HindiTransliterator
 from classifier import LanguageClassifier, languages, file_paths
+
+import requests
 
 tts_generator = SpeechGenerator()
 classifier = LanguageClassifier(file_paths, languages)
@@ -34,20 +35,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Transliterated Text: {transliterated_text}")
 
     lang = classifier.predict_language(transliterated_text)
-
     print(f"Predicted Language: {lang}")
 
     speaker = voice_list.get(lang)
     description = f"{speaker}'s voice is clear and friendly with a moderate pace."
 
-    output_filename = "output.wav"
-    tts_generator.generate_speech(
-        prompt=transliterated_text,
-        description=description,
-        output_filename=output_filename
-    )
 
-    print(f"Generated audio: {output_filename}")
+    url = "http://localhost:8000/generate-audio/"
+    payload = {
+        "text": transliterated_text,
+        "description": description,
+        "voice": speaker
+    }
+
+    response = requests.post(url, json=payload)
+    response.raise_for_status()
+
+    output_filename = "output.wav"
+    with open(output_filename, "wb") as f:
+        f.write(response.content)
 
     await update.message.reply_voice(voice=open(output_filename, 'rb'))
 
