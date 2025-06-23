@@ -6,3 +6,5 @@ pandas
 datasets
 fastapi
 uvicorn
+python-telegram-bot
+python-dotenv

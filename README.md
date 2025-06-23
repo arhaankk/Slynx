@@ -47,7 +47,7 @@ python3.12 -m venv venv
 source venv/bin/activate
 
 # Step 2: Install dependencies
- pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Step 3: To run the Server
 uvicorn app:app --reload
