@@ -146,7 +146,7 @@ if __name__ == "__main__":
     y = classifier.encode_labels()
     classifier.load_or_train_model(x, y)
 
-    text = "Tu kasa aahes?"
+    text = "Tumi kothay? Amar sathe kotha bolte aso."
     predicted_language = classifier.predict_language(text)
     print("Predicted language:", predicted_language)
 

@@ -25,4 +25,20 @@ def test_prediction_marathi(classifier):
     prediction_result = classifier.predict_language(text)
     assert prediction_result == "mr", f"Expected 'mr', got {prediction_result}"
 
-# def test_predictio_telugu
+# telugu script, no code-switching
+def test_prediction_telugu(classifier):
+    text = "Neevu ekkada unnaavu? Ippudu raavali."
+    prediction_result = classifier.predict_language(text)
+    assert prediction_result == "te", f"Expected 'te', got {prediction_result}"
+
+# bengali script, no code-switching
+def test_prediction_bengali(classifier):
+    text = "Tumi kothay? Amar sathe kotha bolte aso."
+    prediction_result = classifier.predict_language(text)
+    assert prediction_result == "bn", f"Expected 'bn', got {prediction_result}"
+
+# malayyam script, no code-switching
+def test_prediction_malayyam(classifier):
+    text = "Ninte evide aanu? Innale njan kandu."
+    prediction_result = classifier.predict_language(text)
+    assert prediction_result == "ml", f"Expected 'ml', got {prediction_result}"
