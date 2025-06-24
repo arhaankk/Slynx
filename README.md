@@ -51,7 +51,11 @@ pip install -r requirements.txt
 
 # Step 3: To run the Server
 uvicorn app:app --reload
+```
 
+### To Run PyTest Fixtures
+```bash
+./run_test.sh
 ```
 
 ### Project Structure
