@@ -1,6 +1,7 @@
 import pytest
 
 from classifier import LanguageClassifier, file_paths, languages
+from transliterator import HindiTransliterator, TeluguTransliterator
 
 @pytest.fixture(scope='module')
 def classifier():
@@ -42,3 +43,9 @@ def test_prediction_malayyam(classifier):
     text = "Ninte evide aanu? Innale njan kandu."
     prediction_result = classifier.predict_language(text)
     assert prediction_result == "ml", f"Expected 'ml', got {prediction_result}"
+
+def test_transliterate_hindi():
+    hindi_transliterator = HindiTransliterator()
+    hindi_transliterator.run_pipeline(train_new_model=False, epochs=10, batch_size=64)
+    text = "kyu bhai? muhje paani nahi chahiye. maine ek baar bola."
+    assert hindi_transliterator.transliterate(text) == "क्यों भाई? मुझे पानी नहीं चाहिए। मैंने एक बार बोला।", "Test Failed! Transliteration incorrect"

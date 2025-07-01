@@ -9,3 +9,6 @@ uvicorn
 python-telegram-bot
 python-dotenv
 pytest
+sentencepiece
+indic-transliteration
+accelerate
