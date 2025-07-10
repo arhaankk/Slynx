@@ -15,7 +15,7 @@ def main():
         "mr": "Sanjay"
     }
 
-    input_text = "Mera brother kal Delhi se wapas aaya."  
+    input_text = "mera naam Rahul hai aur mujhe khaana acha lagta hai"  
     
     output_filename = "output.wav"
 
@@ -34,7 +34,7 @@ def main():
 
     classifier.load_or_train_model(x, y)
 
-    classification_result = classifier.predict_language(transliterated_text)
+    classification_result = classifier.predict_language(input_text)
     print("Classification result:", classification_result)
 
 
