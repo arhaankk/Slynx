@@ -15,7 +15,7 @@ def main():
         "mr": "Sanjay"
     }
 
-    input_text = "teri aisi ki taisi"  
+    input_text = "mera naam Rahul hai aur mujhe khaana acha lagta hai"  
     
     output_filename = "output.wav"
 
