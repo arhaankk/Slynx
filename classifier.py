@@ -120,7 +120,7 @@ class LanguageClassifier:
 if __name__ == "__main__":
     classifier = LanguageClassifier(file_paths, languages)
     classifier.load_data()
-    x = classifier.prepare_tokenizer()
+    x = classifier.data['text']
     y = classifier.encode_labels()
     classifier.load_or_train_model(x, y)
 
