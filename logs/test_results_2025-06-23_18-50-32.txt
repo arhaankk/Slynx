@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.7, pytest-8.4.1, pluggy-1.6.0 -- /Users/arhaankhaku/Documents/Development/Projects/Slynx/venv/bin/python3.12
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.7', 'Platform': 'macOS-15.5-arm64-arm-64bit', 'Packages': {'pytest': '8.4.1', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.9.0', 'metadata': '3.1.1'}}
+rootdir: /Users/arhaankhaku/Documents/Development/Projects/Slynx
+plugins: anyio-4.9.0, metadata-3.1.1
+collecting ... collected 3 items
+
+slynx_test.py::test_prediction_hindi Data distribution:
+language
+hi    186521
+bn    130378
+mr    107853
+te    102607
+ml     86438
+Name: count, dtype: int64
+Languages found: ['bn' 'hi' 'ml' 'mr' 'te']
+Loading existing model from models/language_classifier.h5
+[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 115ms/step[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 122ms/step
+PASSED
+slynx_test.py::test_prediction_marathi [1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 12ms/step
+PASSED
+slynx_test.py::test_predictio_telugu [1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 6ms/step[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 12ms/step
+Test 3: te
+PASSED
+
+============================== 3 passed in 10.04s ==============================

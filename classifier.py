@@ -120,9 +120,10 @@ class LanguageClassifier:
 if __name__ == "__main__":
     classifier = LanguageClassifier(file_paths, languages)
     classifier.load_data()
+    x = classifier.prepare_tokenizer()
     y = classifier.encode_labels()
-    classifier.load_or_train_model(classifier.data['text'], y)
+    classifier.load_or_train_model(x, y)
 
-    test_text = "Tu kasa aahes?"
-    prediction = classifier.predict_language(test_text)
-    print("Predicted language:", prediction)
+    text = "Tumi kothay? Amar sathe kotha bolte aso."
+    predicted_language = classifier.predict_language(text)
+    print("Predicted language:", predicted_language)

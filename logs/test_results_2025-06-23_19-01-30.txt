@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.7, pytest-8.4.1, pluggy-1.6.0 -- /Users/arhaankhaku/Documents/Development/Projects/Slynx/venv/bin/python3.12
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.7', 'Platform': 'macOS-15.5-arm64-arm-64bit', 'Packages': {'pytest': '8.4.1', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.9.0', 'metadata': '3.1.1'}}
+rootdir: /Users/arhaankhaku/Documents/Development/Projects/Slynx
+plugins: anyio-4.9.0, metadata-3.1.1
+collecting ... collected 5 items
+
+slynx_test.py::test_prediction_hindi PASSED                              [ 20%]
+slynx_test.py::test_prediction_marathi PASSED                            [ 40%]
+slynx_test.py::test_prediction_telugu PASSED                             [ 60%]
+slynx_test.py::test_prediction_bengali PASSED                            [ 80%]
+slynx_test.py::test_prediction_malayyam PASSED                           [100%]
+
+============================== 5 passed in 11.05s ==============================

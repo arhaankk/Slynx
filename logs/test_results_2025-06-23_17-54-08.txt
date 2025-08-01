@@ -1,0 +1,46 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.7, pytest-8.4.1, pluggy-1.6.0 -- /Users/arhaankhaku/Documents/Development/Projects/Slynx/venv/bin/python3.12
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.7', 'Platform': 'macOS-15.5-arm64-arm-64bit', 'Packages': {'pytest': '8.4.1', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.9.0', 'html': '4.1.1', 'metadata': '3.1.1'}}
+rootdir: /Users/arhaankhaku/Documents/Development/Projects/Slynx
+plugins: anyio-4.9.0, html-4.1.1, metadata-3.1.1
+collecting ... collected 1 item
+
+slynx_test.py::test_prediction_hindi FAILED                              [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_prediction_hindi _____________________________
+
+classifier = None
+
+    def test_prediction_hindi(classifier):
+        text = "mera naam Rahul hai aur mujhe khaana acha lagta hai"
+>       prediction_result = classifier.predict_language(text)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'predict_language'
+
+slynx_test.py:16: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+Data distribution:
+language
+hi    186521
+bn    130378
+mr    107853
+te    102607
+ml     86438
+Name: count, dtype: int64
+Languages found: ['bn' 'hi' 'ml' 'mr' 'te']
+Loading existing model from models/language_classifier.h5
+------------------------------ Captured log setup ------------------------------
+WARNING  absl:saving_utils.py:259 Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED slynx_test.py::test_prediction_hindi - AttributeError: 'NoneType' obje...
+======================== 1 failed, 2 warnings in 9.36s =========================
