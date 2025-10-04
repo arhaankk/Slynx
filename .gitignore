@@ -8,3 +8,4 @@ models/
 __pycache__/
 *.pyc
 logs/
+progress.txt
