@@ -4,7 +4,6 @@ from transliterator import HindiTransliterator, TeluguTransliterator
 from classifier import LanguageClassifier, languages, file_paths
 
 
-
 def main():
 
     voice_list = {
@@ -38,8 +37,6 @@ def main():
     except:
         print("Language not supported yet")
         
-
-
     # Step 2: Transliteration.
     try:
         transliterator = transliterator_list.get(classification_result)
@@ -49,9 +46,6 @@ def main():
     except:
         print("No available transliterator. Please check classification.")
 
-        
-
-    
     # Step 3: Speech synthesis.
     try:
         speaker = voice_list.get(classification_result)
