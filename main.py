@@ -15,7 +15,7 @@ def main():
         "mr": "Sanjay"
     }
 
-    input_text = "mera naam Rahul hai aur mujhe khaana acha lagta hai"  
+    input_text = "kal mai riya se baat kar rha tha, aur fir usne bola ki, chal breakup kar le abhi. fir maine usko 50000 bheja sephora ke liye, fir kush ho gayi."  
     
     output_filename = "output.wav"
 
