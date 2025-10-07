@@ -250,6 +250,39 @@ class MalayalamTransliterator(BaseTransliterator):
         ]
         super().__init__(data_file, model_path, source_tokens, malayalam_tokens)
 
+class BengaliTransliterator(BaseTransliterator):
+    def __init__(self, data_file="data/databn.tsv", model_path="models/bengali_transliteration_model.keras"):
+        source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
+        bengali_tokens = [
+            'অ', 'আ', 'ই', 'ঈ', 'উ', 'ঊ', 'ঋ', 'এ', 'ঐ', 'ও', 'ঔ',
+            'ক', 'খ', 'গ', 'ঘ', 'ঙ',
+            'চ', 'ছ', 'জ', 'ঝ', 'ঞ',
+            'ট', 'ঠ', 'ড', 'ঢ', 'ণ',
+            'ত', 'থ', 'দ', 'ধ', 'ন',
+            'প', 'ফ', 'ব', 'ভ', 'ম',
+            'য', 'র', 'ল', 'শ', 'ষ', 'স', 'হ',
+            'া', 'ি', 'ী', 'ু', 'ূ', 'ৃ', 'ে', 'ৈ', 'ো', 'ৌ', 'ং', 'ঃ', '্', ' '
+        ]
+        super().__init__(data_file, model_path, source_tokens, bengali_tokens)
+
+class MarathiTransliterator(BaseTransliterator):
+    def __init__(self, data_file="data/datamr.tsv", model_path="models/marathi_transliteration_model.keras"):
+        source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
+        marathi_tokens = [
+            'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ',
+            'क', 'ख', 'ग', 'घ', 'ङ',
+            'च', 'छ', 'ज', 'झ', 'ञ',
+            'ट', 'ठ', 'ड', 'ढ', 'ण',
+            'त', 'थ', 'द', 'ध', 'न',
+            'प', 'फ', 'ब', 'भ', 'म',
+            'य', 'र', 'ल', 'व',
+            'श', 'ष', 'स', 'ह',
+            'ळ', 'क्ष', 'ज्ञ',
+            'ा', 'ि', 'ी', 'ु', 'ू', 'े', 'ै', 'ो', 'ौ', 'ं', 'ः', '्', ' '
+        ]
+        super().__init__(data_file, model_path, source_tokens, marathi_tokens)
+
+
 
 if __name__ == "__main__":
     # For Hindi

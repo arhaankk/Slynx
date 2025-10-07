@@ -1,6 +1,6 @@
 import os
 from speech import SpeechGenerator
-from transliterator import HindiTransliterator, TeluguTransliterator, MalayalamTransliterator
+from transliterator import HindiTransliterator, TeluguTransliterator, MalayalamTransliterator, BengaliTransliterator, MarathiTransliterator
 from classifier import LanguageClassifier, languages, file_paths
 
 
@@ -17,10 +17,12 @@ def main():
     transliterator_list = {
         "hi": HindiTransliterator(),
         "te": TeluguTransliterator(),
-        "ml": MalayalamTransliterator()
-    }
+        "ml": MalayalamTransliterator(),
+        "be": BengaliTransliterator(),
+        "mr": MarathiTransliterator()
+    }       
 
-    input_text = "Indha naala weather romba nalla irukku."  
+    input_text = "tu kaay kartos?"  
     
     output_filename = "output.wav"
 
