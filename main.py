@@ -1,6 +1,6 @@
 import os
 from speech import SpeechGenerator
-from transliterator import HindiTransliterator, TeluguTransliterator
+from transliterator import HindiTransliterator, TeluguTransliterator, MalayalamTransliterator
 from classifier import LanguageClassifier, languages, file_paths
 
 
@@ -16,7 +16,8 @@ def main():
 
     transliterator_list = {
         "hi": HindiTransliterator(),
-        "te": TeluguTransliterator()
+        "te": TeluguTransliterator(),
+        "ml": MalayalamTransliterator()
     }
 
     input_text = "Indha naala weather romba nalla irukku."  
