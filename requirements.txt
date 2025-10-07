@@ -4,3 +4,11 @@ git+https://github.com/huggingface/parler-tts.git
 tensorflow
 pandas
 datasets
+fastapi
+uvicorn
+python-telegram-bot
+python-dotenv
+pytest
+sentencepiece
+indic-transliteration
+accelerate

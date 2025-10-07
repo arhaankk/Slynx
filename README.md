@@ -46,8 +46,16 @@ You can **download** or **directly use** our pretrained models for:
 python3.12 -m venv venv
 source venv/bin/activate
 
-# Step 3: Install dependencies
- pip install -r requirements.txt
+# Step 2: Install dependencies
+pip install -r requirements.txt
+
+# Step 3: To run the Server
+uvicorn app:app --reload
+```
+
+### To Run PyTest Fixtures
+```bash
+./run_test.sh
 ```
 
 ### Project Structure
