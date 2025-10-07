@@ -233,6 +233,23 @@ class TeluguTransliterator(BaseTransliterator):
         ]
         super().__init__(data_file, model_path, source_tokens, telugu_tokens)
 
+class MalayalamTransliterator(BaseTransliterator):
+    def __init__(self, data_file="data/dataml.tsv", model_path="models/malayalam_transliteration_model.keras"):
+        source_tokens = list('abcdefghijklmnopqrstuvwxyz ')
+        malayalam_tokens = [
+            'അ', 'ആ', 'ഇ', 'ഈ', 'ഉ', 'ഊ', 'ഋ', 'എ', 'ഏ', 'ഐ', 'ഒ', 'ഓ', 'ഔ',
+            'ക', 'ഖ', 'ഗ', 'ഘ', 'ങ',
+            'ച', 'ഛ', 'ജ', 'ഝ', 'ഞ',
+            'ട', 'ഠ', 'ഡ', 'ഢ', 'ണ',
+            'ത', 'ഥ', 'ദ', 'ധ', 'ന',
+            'പ', 'ഫ', 'ബ', 'ഭ', 'മ',
+            'യ', 'ര', 'ല', 'വ',
+            'ശ', 'ഷ', 'സ', 'ഹ',
+            'ള', 'ഴ', 'റ',
+            'ാ', 'ി', 'ീ', 'ു', 'ൂ', 'ൃ', 'െ', 'േ', 'ൈ', 'ൊ', 'ോ', 'ൗ', 'ം', 'ഃ', '്', ' '
+        ]
+        super().__init__(data_file, model_path, source_tokens, malayalam_tokens)
+
 
 if __name__ == "__main__":
     # For Hindi

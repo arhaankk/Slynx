@@ -1,0 +1,11 @@
+October 7th 2025
+
+1. project structure 
+2. can take long time to build -> bad from software perpectives
+- hugging face/API based
+- host on server
+3. code switching --> not available in first release
+4. testing -> more testcases
+5. add more transliterators: bn, mr
+6. replace ml with load_or_train_model
+7. transliterator broken: stop training again add again
