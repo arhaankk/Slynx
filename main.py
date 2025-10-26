@@ -18,11 +18,11 @@ def main():
         "hi": HindiTransliterator(),
         "te": TeluguTransliterator(),
         "ml": MalayalamTransliterator(),
-        "be": BengaliTransliterator(),
+        "bn": BengaliTransliterator(),
         "mr": MarathiTransliterator()
     }       
 
-    input_text = "tu kaay kartos?"  
+    input_text = "Tumi jokhon haso, tokhon shob kichu ekdom alokito hoye uthhe — mone hoy din ta aro sundor hoye gelo."  
     
     output_filename = "output.wav"
 
