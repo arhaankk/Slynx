@@ -1,7 +1,10 @@
-# Slynx
+# Slynx - Arhan Khaku and Apoorva Devarakonda
 
 
 # 🎙️ Slynx – Romanized Text to Native Speech
+
+
+
 
 **Slynx** is an end-to-end speech pipeline that converts **romanized language text** into **native-script speech audio**. It is designed to assist **screen reader users**, individuals with **reading difficulties**, and anyone interacting with languages in romanized form.
 
